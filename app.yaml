@@ -1,0 +1,10 @@
+runtime: nodejs20
+
+env_variables:
+  PORT: 8080
+  DATABASE_URL: "postgresql://apture_user:n9YoMOmmmspaQau9SfbH9mpvVNjyj6JD@dpg-d2b1srmr433s739bqu7g-a.virginia-postgres.render.com/apture"
+  JWT_SECRET: "somereallylongandrandomsecretkey"
+
+automatic_scaling:
+  max_instances: 10
+  min_instances: 0

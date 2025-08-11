@@ -1,0 +1,32 @@
+# Node modules and dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build output
+dist/
+build/
+coverage/
+
+# Environment files
+.env
+.env.*
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Prisma generated files
+prisma/dev.db
+prisma/dev.db-journal
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Misc
+*.swp
