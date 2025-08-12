@@ -9,10 +9,11 @@ This is a Node.js/Express backend using TypeScript, Prisma ORM, JWT authenticati
 ## Features
 
 - User authentication (signup & login) with bcrypt password hashing and JWT tokens
-- Role-based user model (`applicant` or `recruiter`)
+- Role-based user model (`applicant` or `recruiter`) with separate profile schemas
 - Prisma ORM for type-safe database access
 - PostgreSQL database (hosted on Render)
 - Modular route and controller structure
+- JWT middleware for protected endpoints
 - Ready for deployment to Google Cloud or Firebase
 
 ## API Endpoints
@@ -23,7 +24,7 @@ All endpoints are prefixed with `/api`:
   Health check endpoint. Returns `{ message: "Hello from API" }`.
 
 - **POST `/api/auth/signup`**  
-  Registers a new user.  
+  Registers a new user and creates corresponding profile.  
   Body:  
   ```json
   {
@@ -32,9 +33,20 @@ All endpoints are prefixed with `/api`:
     "role": "applicant" // or "recruiter"
   }
   ```
+  Response:
+  ```json
+  {
+    "message": "Signup successful",
+    "user": {
+      "email": "user@example.com",
+      "role": "applicant",
+      "profileCreated": true
+    }
+  }
+  ```
 
 - **POST `/api/auth/login`**  
-  Authenticates a user and returns a JWT token.  
+  Authenticates a user and returns JWT token with user data.  
   Body:  
   ```json
   {
@@ -42,6 +54,26 @@ All endpoints are prefixed with `/api`:
     "password": "yourpassword"
   }
   ```
+  Response:
+  ```json
+  {
+    "token": "jwt_token_here",
+    "user": {
+      "id": 1,
+      "email": "user@example.com",
+      "role": "applicant"
+    }
+  }
+  ```
+
+## Database Schema
+
+The application uses separate profile models for different user types:
+
+- **User**: Base authentication model with email, password, and role
+- **ApplicantProfile**: Extended profile for job seekers with academic info, work experience, skills, and preferences
+- **RecruiterProfile**: Extended profile for recruiters with company info and hiring preferences
+- **WorkExperience**: Separate model for applicant work history
 
 ## Developer Guide
 
@@ -61,6 +93,7 @@ All endpoints are prefixed with `/api`:
 3. **Run Prisma migrations:**  
    ```
    npx prisma migrate deploy
+   npx prisma generate
    ```
 
 4. **Start the server:**  
@@ -84,7 +117,9 @@ All endpoints are prefixed with `/api`:
 
 ---
 
-8/8/2025
+## Changelog
+
+**8/8/2025**
 
 New Work:
 - Finalized tentative `User` model in `prisma/schema.prisma`, including enum-based role management (`applicant` vs. `recruiter`)
@@ -94,12 +129,12 @@ New Work:
 - Confirmed deployment via working `POST /api/auth/signup` and `POST /api/auth/login` endpoints from Insomnia
 
 Issues:
-- Needed to refactor project structure slightly to align with Firebase’s Cloud Functions layout (without overhauling folder hierarchy)
+- Needed to refactor project structure slightly to align with Firebase's Cloud Functions layout (without overhauling folder hierarchy)
 - Firebase function deployment flow had a learning curve - requires adjustments to TypeScript output and import paths
 - Still need to test JWT-protected endpoints in production and set up Firebase environment variables securely
 - This week will work to develop candidate info and ID search pages
 
-8/1/2025
+**8/1/2025**
 
 Work so far:
 - Established basic project skeleton and directory structure

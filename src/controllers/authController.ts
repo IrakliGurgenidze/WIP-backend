@@ -24,12 +24,40 @@ export const signup = async (req: Request, res: Response) => {
     // Hash the password before saving
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new user in the database
+    // Create user first
     const user = await prisma.user.create({
-      data: { email, password: hashedPassword, role },
+      data: { 
+        email, 
+        password: hashedPassword, 
+        role
+      }
     });
 
-    res.status(201).json({ message: 'Signup successful', user: { email: user.email, role: user.role } });
+    // Create corresponding profile based on role
+    if (role === 'applicant') {
+      await prisma.applicantProfile.create({
+        data: {
+          userId: user.id
+        }
+      });
+    } else if (role === 'recruiter') {
+      await prisma.recruiterProfile.create({
+        data: {
+          userId: user.id
+        }
+      });
+    } else {
+      return res.status(400).json({ message: 'Invalid role' });
+    }
+
+    res.status(201).json({ 
+      message: 'Signup successful', 
+      user: { 
+        email: user.email, 
+        role: user.role,
+        profileCreated: true
+      } 
+    });
   } catch (error) {
     res.status(500).json({ message: 'Signup failed', error });
   }
@@ -48,8 +76,18 @@ export const login = async (req: Request, res: Response) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
 
+    // Generate JWT token
     const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
-    res.json({ token });
+    
+    // Return both token AND user data
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role
+      }
+    });
   } catch (error) {
     res.status(500).json({ message: 'Login failed', error });
   }

@@ -13,6 +13,96 @@ model User {
   password  String
   role      Role
   createdAt DateTime @default(now())
+  
+  // Relations to profile models
+  applicantProfile ApplicantProfile?
+  recruiterProfile RecruiterProfile?
+}
+
+model ApplicantProfile {
+  id             Int      @id @default(autoincrement())
+  userId         Int      @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Personal information
+  firstName      String?
+  lastName       String?
+  phoneNumber    String?
+  
+  // Academic information
+  university     String?
+  major          String?
+  graduationYear Int?
+  gpa            Float?
+  
+  // Professional information
+  workExperience WorkExperience[]
+  portfolioUrl   String?
+  linkedinUrl    String?
+  githubUrl      String?
+  
+  // Skills and preferences
+  skills         String[] // array of skills
+  interests      String[] // areas of interest
+  experienceLevel String? // entry, junior, mid, senior
+  
+  // Job search preferences
+  preferredLocations String[]
+  salaryExpectation  Int?
+  availability       String? // full-time, part-time, internship
+  
+  // Additional information
+  other          String[] // array for any additional info not captured above
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model WorkExperience {
+  id                Int              @id @default(autoincrement())
+  applicantProfileId Int
+  applicantProfile  ApplicantProfile @relation(fields: [applicantProfileId], references: [id], onDelete: Cascade)
+  
+  companyName       String
+  location          String
+  startDate         DateTime
+  endDate           DateTime?        // null if current job
+  roleDescription   String
+  
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+}
+
+model RecruiterProfile {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Personal information
+  firstName    String?
+  lastName     String?
+  phoneNumber  String?
+  
+  // Company information
+  company      String?
+  position     String?
+  department   String?
+  companySize  String?  // startup, small, medium, large, enterprise
+  industry     String?
+  
+  // Contact information
+  linkedinUrl  String?
+  companyUrl   String?
+  
+  // Recruiting preferences
+  hiringSectors     String[] // tech, finance, healthcare, etc.
+  experienceLevels  String[] // entry, junior, mid, senior
+  
+  // Additional information
+  other        String[] // array for any additional info not captured above
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 enum Role {
