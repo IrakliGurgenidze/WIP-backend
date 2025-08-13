@@ -10,6 +10,8 @@ This is a Node.js/Express backend using TypeScript, Prisma ORM, JWT authenticati
 
 - User authentication (signup & login) with bcrypt password hashing and JWT tokens
 - Role-based user model (`applicant` or `recruiter`) with separate profile schemas
+- Secure profile management with JWT-protected endpoints
+- Work experience tracking for applicants
 - Prisma ORM for type-safe database access
 - PostgreSQL database (hosted on Render)
 - Modular route and controller structure
@@ -19,6 +21,8 @@ This is a Node.js/Express backend using TypeScript, Prisma ORM, JWT authenticati
 ## API Endpoints
 
 All endpoints are prefixed with `/api`:
+
+### Authentication Endpoints
 
 - **GET `/api/hello`**  
   Health check endpoint. Returns `{ message: "Hello from API" }`.
@@ -66,6 +70,139 @@ All endpoints are prefixed with `/api`:
   }
   ```
 
+### Profile Endpoints (Protected)
+
+All profile endpoints require authentication via `Authorization: Bearer <token>` header.
+
+- **GET `/api/profile/applicant`**  
+  Retrieves the authenticated user's applicant profile with work experience.  
+  Headers: `Authorization: Bearer <jwt_token>`  
+  Response:
+  ```json
+  {
+    "profile": {
+      "id": 1,
+      "userId": 1,
+      "firstName": "John",
+      "lastName": "Doe",
+      "phoneNumber": "+1234567890",
+      "university": "Stanford University",
+      "major": "Computer Science",
+      "graduationYear": 2024,
+      "gpa": 3.8,
+      "skills": ["JavaScript", "React", "Node.js"],
+      "experienceLevel": "junior",
+      "workExperience": [
+        {
+          "id": 1,
+          "companyName": "Google",
+          "location": "Mountain View, CA",
+          "startDate": "2023-06-01T00:00:00.000Z",
+          "endDate": "2024-08-01T00:00:00.000Z",
+          "roleDescription": "Software Engineering Intern"
+        }
+      ],
+      "user": {
+        "email": "user@example.com",
+        "role": "applicant",
+        "createdAt": "2025-08-13T00:00:00.000Z"
+      }
+    }
+  }
+  ```
+
+- **PUT `/api/profile/applicant`**  
+  Updates the authenticated user's applicant profile (partial updates supported).  
+  Headers: `Authorization: Bearer <jwt_token>`  
+  Body (all fields optional):
+  ```json
+  {
+    "firstName": "John",
+    "lastName": "Doe",
+    "phoneNumber": "+1234567890",
+    "university": "Stanford University",
+    "major": "Computer Science",
+    "graduationYear": 2024,
+    "gpa": 3.8,
+    "portfolioUrl": "https://johndoe.dev",
+    "linkedinUrl": "https://linkedin.com/in/johndoe",
+    "githubUrl": "https://github.com/johndoe",
+    "skills": ["JavaScript", "React", "Node.js"],
+    "interests": ["Web Development", "AI"],
+    "experienceLevel": "junior",
+    "preferredLocations": ["San Francisco", "Remote"],
+    "salaryExpectation": 85000,
+    "availability": "full-time",
+    "other": ["Additional info"]
+  }
+  ```
+  Response:
+  ```json
+  {
+    "message": "Profile updated successfully",
+    "profile": { /* updated profile object */ }
+  }
+  ```
+
+### Work Experience Endpoints (Protected)
+
+- **POST `/api/profile/applicant/work-experience`**  
+  Adds a new work experience entry for the authenticated applicant.  
+  Headers: `Authorization: Bearer <jwt_token>`  
+  Body:
+  ```json
+  {
+    "companyName": "Google",
+    "location": "Mountain View, CA",
+    "startDate": "2023-06-01",
+    "endDate": "2024-08-01", // optional, null for current job
+    "roleDescription": "Software Engineering Intern working on search algorithms"
+  }
+  ```
+  Response:
+  ```json
+  {
+    "message": "Work experience added successfully",
+    "workExperience": {
+      "id": 1,
+      "companyName": "Google",
+      "location": "Mountain View, CA",
+      "startDate": "2023-06-01T00:00:00.000Z",
+      "endDate": "2024-08-01T00:00:00.000Z",
+      "roleDescription": "Software Engineering Intern working on search algorithms"
+    }
+  }
+  ```
+
+- **PUT `/api/profile/applicant/work-experience/:experienceId`**  
+  Updates a specific work experience entry (user can only update their own).  
+  Headers: `Authorization: Bearer <jwt_token>`  
+  Body: Same as POST above  
+  Response:
+  ```json
+  {
+    "message": "Work experience updated successfully",
+    "workExperience": { /* updated work experience object */ }
+  }
+  ```
+
+- **DELETE `/api/profile/applicant/work-experience/:experienceId`**  
+  Deletes a specific work experience entry (user can only delete their own).  
+  Headers: `Authorization: Bearer <jwt_token>`  
+  Response:
+  ```json
+  {
+    "message": "Work experience deleted successfully"
+  }
+  ```
+
+## Security Features
+
+- **JWT Authentication**: All profile endpoints require valid JWT tokens
+- **User Isolation**: Users can only access and modify their own data
+- **Role Validation**: Role-specific endpoints verify user permissions
+- **Token-based Authorization**: User identity extracted from cryptographically signed tokens
+
 ## Database Schema
 
 The application uses separate profile models for different user types:
@@ -73,7 +210,7 @@ The application uses separate profile models for different user types:
 - **User**: Base authentication model with email, password, and role
 - **ApplicantProfile**: Extended profile for job seekers with academic info, work experience, skills, and preferences
 - **RecruiterProfile**: Extended profile for recruiters with company info and hiring preferences
-- **WorkExperience**: Separate model for applicant work history
+- **WorkExperience**: Separate model for applicant work history with company details and date ranges
 
 ## Developer Guide
 
@@ -107,7 +244,22 @@ The application uses separate profile models for different user types:
    ```
 
 5. **Test endpoints:**  
-   Use Postman, Insomnia, or `curl` to test `/api/auth/signup` and `/api/auth/login`.
+   Use Postman, Insomnia, or `curl` to test authentication and profile endpoints.
+
+### Testing with Authentication
+
+1. **Get a JWT token by logging in:**
+   ```bash
+   curl -X POST http://localhost:8080/api/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"email":"user@example.com","password":"password"}'
+   ```
+
+2. **Use the token in subsequent requests:**
+   ```bash
+   curl -X GET http://localhost:8080/api/profile/applicant \
+     -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
+   ```
 
 ## Deployment
 
@@ -118,6 +270,22 @@ The application uses separate profile models for different user types:
 ---
 
 ## Changelog
+
+**August 13, 2025**
+
+New Work:
+- Implemented secure profile management system with JWT-protected endpoints
+- Added comprehensive applicant profile endpoints (GET, PUT) with partial update support
+- Created work experience management with full CRUD operations (POST, PUT, DELETE)
+- Established robust security model ensuring users can only access their own data
+- Enhanced authentication flow with proper token validation and user isolation
+- Documented all new endpoints with request/response examples and security details
+
+Technical improvements:
+- User data isolation through JWT-extracted user IDs
+- Role-based access control for profile endpoints
+- Secure work experience management with ownership validation
+- Comprehensive error handling and validation
 
 **8/8/2025**
 
