@@ -4,7 +4,9 @@ import {
   updateApplicantProfile,
   addWorkExperience,
   updateWorkExperience,
-  deleteWorkExperience
+  deleteWorkExperience,
+  getRecruiterProfile,
+  updateRecruiterProfile
 } from '../controllers/profileController';
 import { authenticate } from '../middleware/auth';
 
@@ -17,9 +19,13 @@ router.use(authenticate);
 router.get('/applicant', getApplicantProfile);
 router.put('/applicant', updateApplicantProfile);
 
-// Work experience routes
+// Work experience routes (applicant only)
 router.post('/applicant/work-experience', addWorkExperience);
 router.put('/applicant/work-experience/:experienceId', updateWorkExperience);
 router.delete('/applicant/work-experience/:experienceId', deleteWorkExperience);
+
+// Recruiter profile routes
+router.get('/recruiter', getRecruiterProfile);
+router.put('/recruiter', updateRecruiterProfile);
 
 export default router;

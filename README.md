@@ -12,6 +12,7 @@ This is a Node.js/Express backend using TypeScript, Prisma ORM, JWT authenticati
 - Role-based user model (`applicant` or `recruiter`) with separate profile schemas
 - Secure profile management with JWT-protected endpoints
 - Work experience tracking for applicants
+- Applicant search functionality for recruiters
 - Prisma ORM for type-safe database access
 - PostgreSQL database (hosted on Render)
 - Modular route and controller structure
@@ -144,6 +145,32 @@ All profile endpoints require authentication via `Authorization: Bearer <token>`
   }
   ```
 
+- **GET `/api/profile/recruiter`**  
+  Retrieves the authenticated user's recruiter profile.  
+  Headers: `Authorization: Bearer <jwt_token>`
+
+- **PUT `/api/profile/recruiter`**  
+  Updates the authenticated user's recruiter profile (partial updates supported).  
+  Headers: `Authorization: Bearer <jwt_token>`  
+  Body (all fields optional):
+  ```json
+  {
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "phoneNumber": "+1234567890",
+    "company": "TechCorp Inc.",
+    "position": "Senior Talent Acquisition Manager",
+    "department": "Human Resources",
+    "companySize": "large",
+    "industry": "Technology",
+    "linkedinUrl": "https://linkedin.com/in/janesmith",
+    "companyUrl": "https://techcorp.com",
+    "hiringSectors": ["technology", "engineering", "data science"],
+    "experienceLevels": ["junior", "mid", "senior"],
+    "other": ["Remote work friendly", "Diversity focused"]
+  }
+  ```
+
 ### Work Experience Endpoints (Protected)
 
 - **POST `/api/profile/applicant/work-experience`**  
@@ -195,6 +222,26 @@ All profile endpoints require authentication via `Authorization: Bearer <token>`
     "message": "Work experience deleted successfully"
   }
   ```
+
+### Search Endpoints (Recruiter Only)
+
+- **GET `/api/search/applicants`**  
+  Search for applicants based on various criteria (recruiter only).  
+  Headers: `Authorization: Bearer <jwt_token>`  
+  Query Parameters:
+  - `graduationYear` (number)
+  - `major` (string) - partial match
+  - `university` (string) - partial match  
+  - `experienceLevel` (string): entry, junior, mid, senior
+  - `minGpa`, `maxGpa` (number)
+  - `skills` (array) - multiple values supported
+  - `preferredLocations` (array) - multiple values supported
+  - `page` (number, default: 1)
+  - `limit` (number, default: 10, max: 50)
+
+- **GET `/api/search/applicants/:applicantId`**  
+  Get detailed applicant profile (recruiter only).  
+  Headers: `Authorization: Bearer <jwt_token>`
 
 ## Security Features
 
@@ -274,8 +321,11 @@ The application uses separate profile models for different user types:
 **August 13, 2025**
 
 New Work:
+- Implemented recruiter profile management with GET and PUT endpoints supporting company information, hiring preferences, and role validation
+- Added comprehensive applicant search functionality for recruiters with advanced filtering by graduation year, major, university, GPA range, skills, experience level, and preferred locations
+- Enhanced search system with pagination, case-insensitive text matching, array field searches, and performance optimization
 - Implemented secure profile management system with JWT-protected endpoints
-- Added comprehensive applicant profile endpoints (GET, PUT) with partial update support
+- Added comprehensive applicant profile endpoint (GET, PUT) with partial update support
 - Created work experience management with full CRUD operations (POST, PUT, DELETE)
 - Established robust security model ensuring users can only access their own data
 - Enhanced authentication flow with proper token validation and user isolation
@@ -285,6 +335,7 @@ Technical improvements:
 - User data isolation through JWT-extracted user IDs
 - Role-based access control for profile endpoints
 - Secure work experience management with ownership validation
+- Database optimization with indexes for search performance
 - Comprehensive error handling and validation
 
 **8/8/2025**
